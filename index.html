@@ -7,6 +7,7 @@
     <title>WhatsApp Bulk Sender Tool</title>
     <link rel="stylesheet" href="stylingone.css">
     <link rel="stylesheet" href="stylingtwo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         /* Custom Styles (Adapt as needed) */
         .form-boxes {
@@ -121,7 +122,7 @@
                         <div class="col-2 d-flex justify-content-center col-sm-2">
                         </div>
                     </div>
-                    <div class="form-row mb-3 mt-0">
+                    <div class="form-row mb-3 mt-0" id="contact-row-1">
                         <div class="col-4 col-sm-3">
                             <input id="clientName_1" type="text" class="form-control" placeholder="Name 1">
                         </div>
@@ -140,7 +141,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-row mb-3 mt-0">
+                    <div class="form-row mb-3 mt-0" id="contact-row-2">
                         <div class="col-4 col-sm-3">
                             <input id="clientName_2" type="text" class="form-control" placeholder="Name 2">
                         </div>
@@ -159,7 +160,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-row mb-3 mt-0">
+                    <div class="form-row mb-3 mt-0" id="contact-row-3">
                         <div class="col-4 col-sm-3">
                             <input id="clientName_3" type="text" class="form-control" placeholder="Name 3">
                         </div>
@@ -178,7 +179,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-row mb-3 mt-0">
+                    <div class="form-row mb-3 mt-0" id="contact-row-4">
                         <div class="col-4 col-sm-3">
                             <input id="clientName_4" type="text" class="form-control" placeholder="Name 4">
                         </div>
@@ -197,7 +198,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-row mb-3 mt-0">
+                    <div class="form-row mb-3 mt-0" id="contact-row-5">
                         <div class="col-4 col-sm-3">
                             <input id="clientName_5" type="text" class="form-control" placeholder="Name 5">
                         </div>
@@ -235,20 +236,19 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-body" style="background-color: #f8f9fa;">
-                        <label for="defaultMessageTemplateText" class="">Paste Contacts as CSV</label>
-                        <p class="mb-1">Paste or type a comma-separated list contacts (one per row) in the format of:
-                            <strong class="text-privyr-blue">name</strong>, <strong class="text-privyr-blue">phone</strong>, <strong class="text-privyr-blue">address</strong>
-                        </p>
+                        <label for="contactsFromCSV" class="">Paste Contacts</label>
+                        <p class="mb-1">Paste or type the contact details (one per row). The tool will try to
+                            intelligently identify the Name, Phone Number, and Address columns.</p>
                         <textarea class="form-control mt-2" id="contactsFromCSV"
-                            placeholder="Tony,+155512345678,123 Main St&#10;Pepper,+6565420779,456 Oak Ave&#10;Bruce,+919984909812,789 Pine Ln"
-                            rows="6">Tony,+6593888455,123 Main St&#10;Pepper,+6565420779,456 Oak Ave&#10;Bruce,+919984909812,789 Pine Ln</textarea>
-                        <small class="form-text text-muted mt-2">For the best results, include the country code at the
-                            start
-                            of the phone number (e.g. +6591234567).</small>
+                            placeholder="Tony   +155512345678   123 Main St&#10;Pepper  +6565420779   456 Oak Ave&#10;Bruce   +919984909812  789 Pine Ln"
+                            rows="6">Tony   +6593888455   123 Main St&#10;Pepper  +6565420779   456 Oak Ave&#10;Bruce   +919984909812  789 Pine Ln</textarea>
+                        <small class="form-text text-muted mt-2">For the best results, ensure there is consistent
+                            spacing (e.g., using tabs or multiple spaces) between the name, phone number, and address.
+                            Include the country code at the start of the phone number (e.g., +6591234567).</small>
                         <div class="text-right mt-3">
                             <button type="button" class="btn btn-outline-secondary mr-2"
                                 data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-info" onclick="convertContactsFromCSV()">Populate
+                            <button type="button" class="btn btn-info" onclick="convertContactsFromText()">Populate
                                 Contacts</button>
                         </div>
                     </div>
@@ -260,7 +260,44 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
+        let contactCounter = 5;
+
+        function addFiveMoreRows() {
+            for (let i = 0; i < 5; i++) {
+                contactCounter++;
+                let newRow = `
+                    <div class="form-row mb-3 mt-0" id="contact-row-<span class="math-inline">\{contactCounter\}"\>
+<div class\="col\-4 col\-sm\-3"\>
+<input id\="clientName\_</span>{contactCounter}" type="text" class="form-control" placeholder="Name <span class="math-inline">\{contactCounter\}"\>
+</div\>
+<div class\="col\-4 col\-sm\-3"\>
+<input id\="clientPhone\_</span>{contactCounter}" type="tel" class="form-control phone-input"
+                                placeholder="Phone #">
+                        </div>
+                        <div class="col-4 col-sm-4">
+                            <input id="clientAddress_${contactCounter}" type="text" class="form-control" placeholder="Address <span class="math-inline">\{contactCounter\}"\>
+</div\>
+<div class\="col\-2 d\-flex justify\-content\-center col\-sm\-2"\>
+<button id\="whatsappClientBtn\_</span>{contactCounter}" onclick="sendWhatsappToClient(${contactCounter})"
+                                class="btn btn-primary wa-btn btn-enabled d-flex flex-row align-items-center">
+                                <i class="fab fa-whatsapp mr-sm-2 wa-icon"></i>
+                                <span class="d-none d-sm-flex">SEND</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('contact-rows-container').insertAdjacentHTML('beforeend', newRow);
+            }
+        }
+
         function sendWhatsappToClient(clientID) {
             var clientName = $("#clientName_" + clientID).val();
             var clientPhone = $("#clientPhone_" + clientID).val();
             var clientAddress = $("#clientAddress_" + clientID).val();
+            var messageTemplate = $("#defaultMessageTemplateText").val();
+            var message = messageTemplate.replace("@name", clientName).replace("@address", clientAddress);
+            var whatsappMode = $("#whatsapp-mode").val();
+
+            let whatsappUrl = "";
+            if (whatsappMode === "api") {
+                whatsappUrl = `https://api.whatsapp.com
