@@ -271,42 +271,51 @@
         let recipients = [];
 
          function sendWhatsappToClient(clientID) {
-            var clientName = $("#clientName_" + clientID).val();
-            var clientPhone = $("#clientPhone_" + clientID).val();
-            var clientButton = $("#whatsappClientBtn_" + clientID);
-            var whatsappMode = $("#whatsapp-mode").val();
-            var whatsappLink = "";
+            var clientName = $("#clientName_" + clientID).val();
+            var clientPhone = $("#clientPhone_" + clientID).val();
+            var clientButton = $("#whatsappClientBtn_" + clientID);
+            var whatsappMode = $("#whatsapp-mode").val();
+            var whatsappLink = "";
 
-            if (whatsappMode === "api") {
-                whatsappLink = "https://api.whatsapp.com/send/?phone=";
-            } else if (whatsappMode === "web") {
-                whatsappLink = "https://web.whatsapp.com/send?phone=";
-            } else {
-                alert("Invalid WhatsApp mode selected.");
-                return;
-            }
-            let processedPhone = clientPhone.replace(/\s/g, ''); // Remove spaces
-            if (processedPhone.startsWith("+27")) {
-                processedPhone = processedPhone.substring(1);
-            } else if (processedPhone.startsWith("0")) {
-                processedPhone = "27" + processedPhone.substring(1);
-            }
+            if (whatsappMode === "api") {
+                whatsappLink = "https://api.whatsapp.com/send/?phone=";
+            } else if (whatsappMode === "web") {
+                whatsappLink = "https://web.whatsapp.com/send?phone=";
+            } else {
+                alert("Invalid WhatsApp mode selected.");
+                return;
+            }
+            let processedPhone = clientPhone.replace(/\s+/g, ''); // Remove all whitespace
 
-            if (!clientName || !processedPhone) {
-                alert("Please enter both a name and valid phone number");
-                return;
-            }
-            $(clientButton).addClass("btn-disabled").removeClass("btn-enabled");
-            var messageToSend = $("#defaultMessageTemplateText").val().replace(/@name/g, clientName);
+            // Remove + if it exists at the start
+            if (processedPhone.startsWith('+')) {
+                processedPhone = processedPhone.substring(1);
+            }
 
-            customColumns.forEach((column) => {
-                const columnValue = $(`#${column.variable}_${clientID}`).val();
-                messageToSend = messageToSend.replace(column.variable, columnValue || "");
-            });
+            // Handle South African numbers
+            if (processedPhone.startsWith('0')) {
+                // Replace leading 0 with 27
+                processedPhone = '27' + processedPhone.substring(1);
+            } else if (!processedPhone.startsWith('27')) {
+                // If number doesn't start with 27 or 0, add 27
+                processedPhone = '27' + processedPhone;
+            }
 
-            window.open(whatsappLink + processedPhone + "&text=" + encodeURIComponent(messageToSend),
-                "_blank");
-        }
+            if (!clientName || !processedPhone) {
+                alert("Please enter both a name and valid phone number");
+                return;
+            }
+            $(clientButton).addClass("btn-disabled").removeClass("btn-enabled");
+            var messageToSend = $("#defaultMessageTemplateText").val().replace(/@name/g, clientName);
+
+            customColumns.forEach((column) => {
+                const columnValue = $(`#${column.variable}_${clientID}`).val();
+                messageToSend = messageToSend.replace(column.variable, columnValue || "");
+            });
+
+            window.open(whatsappLink + processedPhone + "&text=" + encodeURIComponent(messageToSend),
+                "_blank");
+        }
         function addFiveMoreRows() {
             var currRows = getContactListCount();
             setBlankContactRowsUI(currRows + 5);
