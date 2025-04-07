@@ -8,13 +8,12 @@
     <link rel="stylesheet" href="https://raw.githubusercontent.com/damianrc/tools/main/stylingone.css">
     <link rel="stylesheet" href="https://raw.githubusercontent.com/damianrc/tools/main/stylingtwo.css">
     <style>
-        /* Custom Styles (Adapt as needed) */
         .form-boxes {
             background-color: #ffffff;
             padding: 30px;
             border-radius: 20px;
             width: 90%;
-            max-width: 1200px; /* Increased max-width to accommodate the new column */
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -53,14 +52,18 @@
 
             .form-row {
                 row-gap: 7px;
+                flex-direction: column;
             }
 
             .form-row input {
                 padding: 10px 8px;
+                width: 100%;
             }
 
             .wa-btn {
                 padding: 10px 15px;
+                width: 100%;
+                margin-top: 10px;
             }
 
             .small-container {
@@ -69,6 +72,10 @@
 
             .wa-icon {
                 font-size: 22px;
+            }
+
+            .form-row > div {
+                margin-bottom: 10px;
             }
         }
     </style>
