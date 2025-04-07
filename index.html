@@ -290,14 +290,13 @@
             }
         }
 
-        function sendWhatsappToClient(clientID) {
-            var clientName = $("#clientName_" + clientID).val();
-            var clientPhone = $("#clientPhone_" + clientID).val();
-            var clientAddress = $("#clientAddress_" + clientID).val();
-            var messageTemplate = $("#defaultMessageTemplateText").val();
-            var message = messageTemplate.replace("@name", clientName).replace("@address", clientAddress);
-            var whatsappMode = $("#whatsapp-mode").val();
+        function convertContactsFromText() {
+            const contactsText = document.getElementById('contactsFromCSV').value;
+            const lines = contactsText.trim().split('\n');
 
-            let whatsappUrl = "";
-            if (whatsappMode === "api") {
-                whatsappUrl = `https://api.whatsapp.com
+            lines.forEach((line, index) => {
+                const values = line.trim().split(/\s{2,}|\t/); // Split by two or more spaces or tabs
+                if (values.length >= 2) {
+                    const name = values[0] ? values[0].trim() : '';
+                    const phone = values[1] ? values[1].trim() : '';
+                    const address = values[2] ? values
