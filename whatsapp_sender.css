@@ -36,7 +36,7 @@ body {
   border: 1px solid var(--border-color);
   padding: 40px;
   margin: 30px auto;
-  max-width: 900px;
+  max-width: 1200px;
 }
 
 /* Typography */
@@ -108,7 +108,7 @@ textarea.form-control {
 
 /* WhatsApp Button */
 .wa-btn {
-  min-width: 70px;
+  min-width: 84px;
   height: 38px;
   display: flex;
   align-items: center;
@@ -306,7 +306,7 @@ select.form-control {
   
   .wa-btn {
     padding: 8px 10px;
-    min-width: 50px;
+    min-width: 60px;
     height: 36px;
   }
   
