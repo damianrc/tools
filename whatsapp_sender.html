@@ -328,13 +328,27 @@
             </div>
         </div>
         <div class="modal fade" id="modal-pasteContactsCSV" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-body" style="background-color: #f8f9fa;">
-                        <label for="defaultMessageTemplateText" class="">Paste Contacts as CSV</label>
-                        <p class="mb-1">Paste or type a comma-separated list contacts (one per row) in the format of: <strong class="text-privyr-blue">name</strong>, <strong class="text-privyr-blue">phone</strong>.</p>
-                        <textarea class="form-control mt-2" id="contactsFromCSV" placeholder="Tony,+155512345678\nPepper,+6565420779" rows="6">Tony,+6593888455\nPepper,+6565420779\nBruce,+919984909812</textarea>
-                        <small class="form-text text-muted mt-2">For the best results, include the country code at the start of the phone number (e.g. +6591234567).</small>
+                        <label for="defaultMessageTemplateText" class="">Paste Contacts</label>
+                        <p class="mb-2"><strong>Formats:</strong></p>
+                        <ul class="small mb-3" style="margin-left: 20px; color: #666;">
+                            <li><strong>Spreadsheet paste (recommended):</strong> Copy from Excel/Google Sheets and paste directly - columns are separated by tabs</li>
+                            <li><strong>Comma-separated:</strong> Use commas to separate values</li>
+                        </ul>
+                        
+                        <div class="mb-3 p-2" style="background-color: white; border-radius: 4px; border-left: 3px solid #4D5BED;">
+                            <p class="small font-weight-bold mb-2">Expected columns (in order):</p>
+                            <div id="import-columns-list" class="small" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span style="background-color: #e7f3ff; padding: 4px 8px; border-radius: 3px; color: #2c5aa0;">Name</span>
+                                <span style="background-color: #e7f3ff; padding: 4px 8px; border-radius: 3px; color: #2c5aa0;">Phone</span>
+                            </div>
+                        </div>
+                        
+                        <label for="contactsFromCSV">Paste your data below:</label>
+                        <textarea class="form-control mt-2" id="contactsFromCSV" placeholder="Name	Phone	Address&#10;Tony	+6593888455	123 Main St&#10;Pepper	+6565420779	456 Oak Ave&#10;Bruce	+919984909812	789 Pine Rd" rows="8"></textarea>
+                        <small class="form-text text-muted mt-2">💡 For best results, include the country code (e.g. +6591234567). Each row will create a new contact.</small>
                         <div class="text-right mt-3">
                             <button type="button" class="btn btn-outline-secondary mr-2" data-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-info" onclick="convertContactsFromCSV()">Populate Contacts</button>
@@ -521,7 +535,13 @@
         }
         
         // Load data when page loads
-        document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+            updateImportColumnsList();
+        });
+        
+        // Update column list when modal is opened
+        $('#modal-pasteContactsCSV').on('show.bs.modal', updateImportColumnsList);
         
         function renderSavedTemplates() {
             const container = $('#saved-templates-list');
@@ -920,21 +940,76 @@
             return $("#table-body tr").length;
         }
         
-        function convertContactsFromCSV() {
-            var contactsArray = $('#contactsFromCSV').val().split('\n');
-            var contactIndex = 1;
-            setBlankContactRowsUI(contactsArray.length);
-            contactsArray.forEach(function (contactRow) {
-                const trimmedRow = contactRow.trim().replace(/\s+/g, ' ');
-                const words = trimmedRow.split(',');
-                if (words.length > 0) {
-                    var nameInput = $("#clientName_" + contactIndex);
-                    var phoneInput = $("#clientPhone_" + contactIndex);
-                    nameInput.val(words[0] || "");
-                    phoneInput.val(words[1] || "");
-                }
-                contactIndex++;
+        function updateImportColumnsList() {
+            const columnsList = $('#import-columns-list');
+            const columns = ['Name', 'Phone'];
+            
+            // Add custom columns to the list
+            customColumns.forEach((column) => {
+                columns.push(column.name);
             });
+            
+            // Build HTML for columns display
+            let html = '';
+            columns.forEach((colName) => {
+                html += `<span style="background-color: #e7f3ff; padding: 4px 8px; border-radius: 3px; color: #2c5aa0;">${colName}</span>`;
+            });
+            
+            columnsList.html(html);
+        }
+        
+        function convertContactsFromCSV() {
+            const csvText = $('#contactsFromCSV').val();
+            
+            if (!csvText.trim()) {
+                alert("Please paste contacts data.");
+                return;
+            }
+            
+            // Split into rows and filter out empty rows
+            const rows = csvText.split('\n').filter(row => row.trim());
+            
+            if (rows.length === 0) {
+                alert("No contacts found to import.");
+                return;
+            }
+            
+            // Auto-detect separator (tab or comma)
+            const firstRow = rows[0];
+            const separator = firstRow.includes('\t') ? '\t' : ',';
+            
+            // Parse each row
+            const contacts = rows.map(row => {
+                const fields = row.split(separator).map(f => f.trim());
+                const contact = {
+                    name: fields[0] || '',
+                    phone: fields[1] || '',
+                    customFields: {}
+                };
+                
+                // Fill custom column data in order (starting at index 2)
+                customColumns.forEach((column, i) => {
+                    contact.customFields[column.variable] = fields[2 + i] || '';
+                });
+                
+                return contact;
+            });
+            
+            // Set the UI with the number of rows needed
+            setBlankContactRowsUI(contacts.length);
+            
+            // Populate the rows with data
+            contacts.forEach((contact, index) => {
+                const rowIndex = index + 1;
+                $(`#clientName_${rowIndex}`).val(contact.name);
+                $(`#clientPhone_${rowIndex}`).val(contact.phone);
+                
+                Object.keys(contact.customFields).forEach((variable) => {
+                    const sanitizedVar = variable.replace('@', '');
+                    $(`#${sanitizedVar}_${rowIndex}`).val(contact.customFields[variable]);
+                });
+            });
+            
             $('#modal-pasteContactsCSV').modal('hide');
             saveToLocalStorage();
         }
@@ -979,6 +1054,9 @@
             
             // Add new column
             customColumns.push({ name: columnName, variable: normalizedVariable });
+            
+            // Update the import modal's column list
+            updateImportColumnsList();
             
             // Rebuild table
             setBlankContactRowsUI(currentRowCount);
@@ -1044,6 +1122,9 @@
                 
                 // Remove column from array
                 customColumns.splice(columnIndex, 1);
+                
+                // Update the import modal's column list
+                updateImportColumnsList();
                 
                 // Rebuild table
                 setBlankContactRowsUI(rowCount);
