@@ -677,21 +677,30 @@
                     }
                     
                     // Rebuild table with remaining data
-                    setBlankContactRowsUI(allData.length || 1);
+                    const newRowCount = allData.length > 0 ? allData.length : 1;
+                    setBlankContactRowsUI(newRowCount);
                     
-                    // Restore the remaining data
-                    allData.forEach((rowData, index) => {
-                        const rowIdx = index + 1;
-                        $(`#clientName_${rowIdx}`).val(rowData.name);
-                        $(`#clientPhone_${rowIdx}`).val(rowData.phone);
-                        
-                        Object.keys(rowData.customFields).forEach((variable) => {
-                            const sanitizedVar = variable.replace('@', '');
-                            $(`#${sanitizedVar}_${rowIdx}`).val(rowData.customFields[variable]);
+                    // Use setTimeout to ensure DOM is updated before populating data
+                    setTimeout(() => {
+                        // Restore the remaining data
+                        allData.forEach((rowData, index) => {
+                            const rowIdx = index + 1;
+                            if ($(`#clientName_${rowIdx}`).length) { // Check if element exists
+                                $(`#clientName_${rowIdx}`).val(rowData.name);
+                                $(`#clientPhone_${rowIdx}`).val(rowData.phone);
+                                
+                                Object.keys(rowData.customFields).forEach((variable) => {
+                                    const sanitizedVar = variable.replace('@', '');
+                                    const $elem = $(`#${sanitizedVar}_${rowIdx}`);
+                                    if ($elem.length) {
+                                        $elem.val(rowData.customFields[variable]);
+                                    }
+                                });
+                            }
                         });
-                    });
-                    
-                    saveToLocalStorage();
+                        
+                        saveToLocalStorage();
+                    }, 50);
                 }
             }
         }
@@ -724,14 +733,26 @@
             
             // Clear contacts if checkbox is checked
             if (clearContacts) {
+                // Remove from localStorage FIRST
                 localStorage.removeItem(STORAGE_KEYS.CONTACTS);
                 localStorage.removeItem(STORAGE_KEYS.CUSTOM_COLUMNS);
                 customColumns = [];
+                
+                // Rebuild UI with 5 blank rows
                 setBlankContactRowsUI(5);
+                
+                // Ensure all inputs are cleared
+                $('[data-save-field="true"]').val('');
+                
+                // Use setTimeout to ensure DOM updates complete before saving
+                setTimeout(() => {
+                    // Now save the cleared state to localStorage
+                    saveToLocalStorage();
+                }, 50);
+            } else if (clearMessage) {
+                // If only clearing message (not contacts), save the updated state
+                saveToLocalStorage();
             }
-            
-            // Save updated state to localStorage
-            saveToLocalStorage();
             
             $('#modal-clearData').modal('hide');
         }
@@ -930,7 +951,11 @@
             for (var i = 1; i <= formLength; i++) {
                 rowsHTML += buildContactRowHTML(i);
             }
-            $("#table-body").html(rowsHTML);
+            
+            // Clear the body and set new HTML
+            const $tableBody = $("#table-body");
+            $tableBody.empty(); // Explicitly clear existing content
+            $tableBody.html(rowsHTML);
             
             // Calculate and apply dynamic column widths
             setTimeout(calculateColumnWidths, 10);
