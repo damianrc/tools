@@ -936,13 +936,6 @@
         }
         
         function setBlankContactRowsUI(formLength) {
-            var currRows = getContactListCount();
-            var rowsTobeAdded = formLength - getContactListCount();
-            if (rowsTobeAdded < 0) {
-                console.log("Invalid operation. Cannot remove rows");
-                return;
-            }
-            
             // Build header
             $("#table-header").html(buildTableHeader());
             
